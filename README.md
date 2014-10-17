@@ -139,4 +139,92 @@ Open the app (same as opening it in the browser):
 And your app should be up on Heroku.
 
 ##Signing up, and deploying to Azure
-Azure does not offer a PaaS offering for NodeJS + Redis at this time
+
+First, log in to the Windows Azure dashboard at [https://manage.windowsazure.com](https://manage.windowsazure.com).
+
+Create a new Ubuntu 14.04 virtual machine. It does not matter what tier you use, but it should be above the shared option.
+
+Now SSH into your new instance on port 22 with PuTTY or use the SSH command:
+
+```bash
+ssh [your_username]@[your_cloud_service]
+```
+
+Now we need to install the NodeSource repository to get pre-built Node.js binaries.
+
+Type the following commands into your console:
+
+```bash
+curl -sL https://deb.nodesource.com/setup | sudo bash -
+sudo apt-get update
+sudo apt-get install -y nodejs build-essentials
+```
+
+Once these commands have finished running, you can test your install by running the following commands:
+
+```bash
+node -v
+npm -v
+```
+
+If both commands return a number, then you're ready to move on.
+
+Now we need to install Redis. The latest version at this writing is 2.8.17.
+
+Type the following commands in the terminal to install Redis:
+
+```bash
+sudo apt-get update
+sudo apt-get install tcl8.5
+wget http://download.redis.io/releases/redis-2.8.17.tar.gz
+tar xzf redis-2.8.17.tar.gz
+cd redis-2.8.17
+make
+make test
+sudo make install
+```
+
+Redis has been built and installed, but now you must configure it, which is a very simple process.
+
+Just type the following commands:
+
+```bash
+cd utils
+./install_server.sh
+```
+
+You don't need to specify any changes, so just hit return for all of the questions.
+
+Finally, we need to start Redis. Please note that you will need to run this command every time you reboot the computer.
+
+```bash
+sudo service redis_6379 start
+```
+
+Now, we need to start the server. Run the following commands to prepare and start your server:
+
+```bash
+npm install -g forever
+sudo apt-get install git
+git clone https://github.com/nhubbard/nodejs-todo.git
+cd nodejs-todo
+npm link forever
+npm install
+forever start server.js
+```
+
+Now check your cloud service domain at port 3000. You should see the app. If so, congratulations!
+
+NOTES:
+
+To stop your server, issue this command:
+
+```bash
+forever stop server.js
+```
+
+Your cloud service domain at port 3000 should look like this:
+
+```
+http://***************.cloudapp.net:3000
+```
