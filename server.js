@@ -6,7 +6,6 @@ var cookieParser = require('cookie-parser');
 var session = require('cookie-session');
 var config = require('./lib/config');
 var redis = require("redis");
-var secret = require('./lib/secret');
 var connect = require('connect');
 var methodOverride = require('method-override');
 var bodyParser = require('body-parser');
@@ -19,7 +18,9 @@ if(process.env.RIAK_NODES) {
 }
 
 var dbType = getDbType();
+
 app.locals.dbType = dbType;
+
 function getDbType() {
   if(Riak && process.env.RIAK_NODES) {
     return 'riak';
@@ -29,17 +30,15 @@ function getDbType() {
 }
 
 var client = null;
+
 if(dbType == 'riak') {
   client = new Riak.Client(process.env.RIAK_NODES.split(','));
 } else if(process.env.REDISTOGO_URL) { //heroku
-  client = require('redis-url').connect(process.env.REDISTOGO_URL); 
+  client = require('redis-url').connect(process.env.REDISTOGO_URL);
 } else if(config.env == "development") {
   client = redis.createClient();
-}  else { //nodejitsu
-  client = redis.createClient(secret.redisPort, secret.redisMachine);
-  client.auth(secret.redisAuth, function (err) {
-     if (err) { throw err; }
-  });
+}  else {
+  throw "Not sure how to connect to redis.";
 }
 
 app.set('view engine', 'ejs');
@@ -216,7 +215,6 @@ app.post('/todos/update', function(req, res) {
 app.post('/todos/delete', function(req, res) {
   var id = req.body.id;
   if(dbType == 'riak') {
-
     async.waterfall([function(callback) {
 
       client.fetchValue({bucket: 'todos', key: 'ids', convertToJs: true},
