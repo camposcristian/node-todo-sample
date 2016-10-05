@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ##Todo App (MIT License)
 
 Simple backed todo app.
